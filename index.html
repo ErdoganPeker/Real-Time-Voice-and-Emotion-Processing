@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SesAnaliz | Türkçe Ses Tanıma ve Duygu Analizi Aracı</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --secondary: #7c3aed;
+      --secondary-dark: #6d28d9;
+      --danger: #dc2626;
+      --danger-dark: #b91c1c;
+      --success: #16a34a;
+      --success-dark: #15803d;
+      --warning: #f59e0b;
+      --neutral: #4b5563;
+      --bg-light: #f9fafb;
+      --bg-dark: #1f2937;
+      --text-light: #f9fafb;
+      --text-dark: #1f2937;
+      --border-light: #e5e7eb;
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --transition: all 0.2s ease-in-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    header {
+      background-color: var(--primary);
+      background-image: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--text-light);
+      padding: 1.5rem 0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .logo i {
+      font-size: 1.8rem;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    main {
+      padding: 2rem 0;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 0.75rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .input-help {
+      font-size: 0.875rem;
+      color: var(--neutral);
+      margin-top: 0.5rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: var(--danger-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: var(--success-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-disabled {
+      background-color: #d1d5db;
+      color: #6b7280;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .transcript-box {
+      position: relative;
+      background-color: white;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 1.5rem;
+      min-height: 200px;
+      transition: var(--transition);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .transcript-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .transcript-content {
+      white-space: pre-line;
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .transcript-placeholder {
+      color: var(--neutral);
+      font-style: italic;
+    }
+
+    .transcript-info {
+      position: absolute;
+      right: 16px;
+      bottom: 12px;
+      font-size: 0.75rem;
+      color: var(--neutral);
+      background-color: rgba(249, 250, 251, 0.8);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .live-indicator {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--danger);
+      background-color: rgba(254, 226, 226, 0.8);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      backdrop-filter: blur(4px);
+    }
+
+    .live-indicator.active {
+      display: flex;
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--danger);
+      animation: pulse 1.5s infinite;
+    }
+
+    .emotion-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      background-color: #f3f4f6;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+    }
+
+    .emotion-panel:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .emotion-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .emotion-icon {
+      font-size: 2.25rem;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    }
+
+    .emotion-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .emotion-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .emotion-score {
+      font-size: 0.9rem;
+      color: var(--neutral);
+    }
+
+    .emotion-meter {
+      width: 60%;
+      height: 10px;
+      background-color: #e5e7eb;
+      border-radius: 9999px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .emotion-meter-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.5s ease;
+    }
+
+    .emotion-meter-fill.happy {
+      background-color: #10b981;
+      background-image: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .emotion-meter-fill.sad {
+      background-color: #3b82f6;
+      background-image: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .emotion-meter-fill.angry {
+      background-color: #ef4444;
+      background-image: linear-gradient(90deg, #ef4444, #f87171);
+    }
+
+    .emotion-meter-fill.neutral {
+      background-color: #9ca3af;
+      background-image: linear-gradient(90deg, #9ca3af, #d1d5db);
+    }
+
+    .settings-panel {
+      background-color: #f8fafc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      border: 1px dashed #cbd5e1;
+      transition: var(--transition);
+    }
+
+    .settings-panel:hover {
+      border-style: solid;
+      border-color: #94a3b8;
+    }
+
+    .settings-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--secondary);
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 1rem;
+    }
+
+    .settings-item {
+      flex: 1;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      border-radius: 34px;
+      transition: var(--transition);
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+
+    .footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 0;
+      color: var(--neutral);
+      font-size: 0.9rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .footer-links a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: #ecfdf5;
+      color: #059669;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      margin-left: 8px;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+    }
+
+    .model-badge.turbo {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background-color: var(--danger);
+    }
+
+    .toast.success {
+      background-color: var(--success);
+    }
+
+    .toast.warning {
+      background-color: var(--warning);
+    }
+
+    .toast.info {
+      background-color: var(--primary);
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .emotion-panel {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .emotion-meter {
+        width: 100%;
+      }
+
+      .settings-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+    }
+
+    body.dark-mode .card,
+    body.dark-mode .transcript-box {
+      background-color: #2d3748;
+      border-color: #4a5568;
+    }
+
+    body.dark-mode .emotion-panel,
+    body.dark-mode .settings-panel {
+      background-color: #374151;
+      border-color: #4b5563;
+    }
+
+    body.dark-mode .input-field {
+      background-color: #4b5563;
+      border-color: #6b7280;
+      color: white;
+    }
+
+    body.dark-mode .toggle-slider {
+      background-color: #4a5568;
+    }
+
+    body.dark-mode .theme-toggle {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .card-title {
+      color: #60a5fa;
+      border-bottom-color: #3b82f6;
+    }
+
+    body.dark-mode .transcript-placeholder {
+      color: #9ca3af;
+    }
+
+    body.dark-mode .transcript-info {
+      background-color: rgba(45, 55, 72, 0.8);
+      color: #d1d5db;
+    }
+
+    body.dark-mode .status-badge {
+      background-color: #064e3b;
+      color: #6ee7b7;
+    }
+
+    body.dark-mode .model-badge {
+      background-color: rgba(37, 99, 235, 0.2);
+      color: #93c5fd;
+    }
+
+    body.dark-mode .model-badge.turbo {
+      background-color: rgba(217, 119, 6, 0.2);
+      color: #fcd34d;
+    }
+
+    body.dark-mode .footer-links a {
+      color: #60a5fa;
+    }
+
+    body.dark-mode .footer-links a:hover {
+      color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-microphone-alt"></i>
+          <span>SesAnaliz</span>
+          <span class="status-badge"><i class="fas fa-circle"></i> Pro</span>
+        </div>
+        <button id="themeToggle" class="theme-toggle" aria-label="Tema Değiştir">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="card">
+        <h2 class="card-title"><i class="fas fa-waveform"></i>Türkçe Ses Tanıma ve Duygu Analizi</h2>
+
+        <div class="input-group">
+          <label for="duration" class="input-label">Kayıt Süresi (saniye)</label>
+          <input type="number" id="duration" class="input-field" min="0" max="60" value="0">
+          <p class="input-help">0 değeri girerseniz, kayıt süresiz olacak ve manuel olarak durdurmanız gerekecek.</p>
+        </div>
+
+        <div class="btn-group">
+          <button id="record" class="btn btn-primary">
+            <i class="fas fa-microphone"></i>
+            Kayıtı Başlat
+          </button>
+          <button id="stop" class="btn btn-danger" style="display: none;">
+            <i class="fas fa-stop"></i>
+            Kayıtı Durdur
+          </button>
+          <button id="download" class="btn btn-success" disabled>
+            <i class="fas fa-download"></i>
+            Metni İndir
+          </button>
+          <button id="clearBtn" class="btn btn-secondary">
+            <i class="fas fa-trash-alt"></i>
+            Temizle
+          </button>
+        </div>
+
+        <div class="transcript-box">
+          <div class="live-indicator" id="liveIndicator">
+            <div class="live-dot"></div>
+            <span>Kayıt Aktif</span>
+          </div>
+          <div id="transcript" class="transcript-content transcript-placeholder">Ses kaydetmek için "Kayıtı Başlat" düğmesine tıklayın.</div>
+          <div id="transcriptInfo" class="transcript-info" style="display: none;"></div>
+        </div>
+
+        <div class="emotion-panel">
+          <div class="emotion-display">
+            <div id="emotionIcon" class="emotion-icon">😐</div>
+            <div class="emotion-details">
+              <div id="emotionName" class="emotion-name">Nötr</div>
+              <div id="emotionScore" class="emotion-score">Skor: 0.50</div>
+            </div>
+          </div>
+          <div class="emotion-meter">
+            <div id="emotionMeter" class="emotion-meter-fill neutral" style="width: 50%;"></div>
+          </div>
+        </div>
+
+        <div class="settings-panel">
+          <h3 class="settings-title"><i class="fas fa-cog"></i> Gelişmiş Ayarlar</h3>
+          <div class="settings-row">
+            <div class="settings-item">
+              <label class="input-label">Gerçek Zamanlı Analiz</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="realtimeToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-item">
+              <label class="input-label">Mikrofon Hassasiyeti</label>
+              <input type="range" id="sensitivityRange" class="input-field" min="0" max="100" value="75">
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <label for="languageSelect" class="input-label">Dil Seçimi</label>
+              <select id="languageSelect" class="input-field" disabled>
+                <option value="tr" selected>Türkçe</option>
+                <option value="en" disabled>İngilizce (Yakında)</option>
+                <option value="de" disabled>Almanca (Yakında)</option>
+              </select>
+            </div>
+            <div class="settings-item">
+              <label for="modelSelect" class="input-label">Model Seçimi</label>
+              <select id="modelSelect" class="input-field">
+                <option value="tiny">Tiny (En Hızlı, Düşük Doğruluk)</option>
+                <option value="base">Base (Hızlı)</option>
+                <option value="small">Small (Orta Hız)</option>
+                <option value="medium" selected>Medium (Önerilen)</option>
+                <option value="large">Large (En Yüksek Doğruluk, Yavaş)</option>
+                <option value="turbo">Turbo (Hızlandırılmış, Medium Doğruluk)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div>&copy; 2025 SesAnaliz | Türkçe Ses Tanıma ve Duygu Analizi Uygulaması</div>
+      <div class="footer-links">
+        <a href="#"><i class="fas fa-book"></i> Dokümantasyon</a>
+        <a href="#"><i class="fas fa-question-circle"></i> Yardım</a>
+        <a href="#"><i class="fas fa-shield-alt"></i> Gizlilik</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast">Bildirim mesajı</div>
+
+  <!-- JavaScript kodu direkt olarak HTML içine yerleştirildi (script.js yerine) -->
+  <script>
+    /**
+     * SesAnaliz - Türkçe Ses Tanıma ve Duygu Analizi Uygulaması
+     * script.js - Düzeltilmiş versiyon
+     */
+
+    // DOM elementleri
+    const recordBtn = document.getElementById("record");
+    const stopBtn = document.getElementById("stop");
+    const downloadBtn = document.getElementById("download");
+    const clearBtn = document.getElementById("clearBtn");
+    const transcriptDiv = document.getElementById("transcript");
+    const transcriptInfo = document.getElementById("transcriptInfo");
+    const liveIndicator = document.getElementById("liveIndicator");
+    const durationInput = document.getElementById("duration");
+    const themeToggle = document.getElementById("themeToggle");
+    const realtimeToggle = document.getElementById("realtimeToggle");
+    const sensitivityRange = document.getElementById("sensitivityRange");
+    const languageSelect = document.getElementById("languageSelect");
+    const modelSelect = document.getElementById("modelSelect");
+    const toast = document.getElementById("toast");
+
+    // Duygu durumu elementleri
+    const emotionIcon = document.getElementById("emotionIcon");
+    const emotionName = document.getElementById("emotionName");
+    const emotionScore = document.getElementById("emotionScore");
+    const emotionMeter = document.getElementById("emotionMeter");
+
+    // Ses kayıt değişkenleri
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let transcribedText = "";
+    let currentStream = null;
+    let lastModelUsed = "";
+
+    // Kayıt ayarları
+    const RECORDING_INTERVAL = 5000; // 5 saniyede bir analiz
+    let recordingInterval = null;
+    let isRealTimeEnabled = true;
+    let sensitivity = 75;
+    let isRecording = false;
+    let isProcessing = false; // İşlem durumu kontrolü için yeni değişken
+
+    // Uygulama sabitleri
+    const APP_VERSION = "2.1.0";
+    const DEFAULT_DURATION = 0;
+    const MAX_DURATION = 60;
+    const MIN_DURATION = 0;
+
+    // Duygu durumu ayarları
+    const emotionConfig = {
+      happy: {
+        icon: "😄",
+        text: "Olumlu",
+        className: "happy",
+        color: "#10b981"
+      },
+      sad: {
+        icon: "😔",
+        text: "Olumsuz",
+        className: "sad",
+        color: "#3b82f6"
+      },
+      angry: {
+        icon: "😠",
+        text: "Olumsuz",
+        className: "angry",
+        color: "#ef4444"
+      },
+      neutral: {
+        icon: "😐",
+        text: "Nötr",
+        className: "neutral",
+        color: "#9ca3af"
+      }
+    };
+
+    /**
+     * Sayfa yükleme işlemleri
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeApp();
+
+      // Olay dinleyicileri
+      themeToggle.addEventListener('click', toggleTheme);
+      realtimeToggle.addEventListener('change', handleRealtimeToggle);
+      sensitivityRange.addEventListener('change', handleSensitivityChange);
+      modelSelect.addEventListener('change', saveUserPreferences);
+      durationInput.addEventListener('input', handleDurationInput);
+
+      // Kayıt butonları
+      recordBtn.addEventListener('click', startRecording);
+      stopBtn.addEventListener('click', stopRecording);
+      downloadBtn.addEventListener('click', downloadTranscript);
+      clearBtn.addEventListener('click', clearTranscript);
+
+      // Başlangıç duygu durumu
+      updateEmotionDisplay("neutral", 0.5);
+
+      // Sunucu durumunu kontrol et
+      checkServerStatus();
+    });
+
+    /**
+     * Uygulamayı başlat
+     */
+    function initializeApp() {
+      // Kullanıcı tercihlerini yükle
+      loadUserPreferences();
+
+      // Mikrofon erişimini kontrol et
+      checkMicrophoneAccess();
+
+      // Tarayıcı uyumluluğunu kontrol et
+      checkBrowserCompatibility();
+
+      // Console'a versiyon bilgisi
+      console.info(`SesAnaliz v${APP_VERSION} başlatıldı`);
+    }
+
+    /**
+     * Sunucu durumunu kontrol et
+     */
+    async function checkServerStatus() {
+      try {
+        const response = await fetch('/api/status');
+
+        if (response.ok) {
+          const data = await response.json();
+          console.info(`Sunucu durumu: ${data.status}, Model: ${data.model}, Versiyon: ${data.version}`);
+
+          // Mevcut modelleri kontrol et ve gerekirse modelSelect'i güncelle
+          if (data.available_models && Array.isArray(data.available_models)) {
+            updateModelSelect(data.available_models);
+          }
+
+          showToast("Uygulama hazır", "success");
+        } else {
+          showToast("Sunucu bağlantısı kurulamadı", "warning");
+        }
+      } catch (error) {
+        console.error("Sunucu durum kontrolü hatası:", error);
+        showToast("Sunucu bağlantısı kurulamadı. Basit API testi için /api/status endpoint'i eklenmelidir.", "error");
+      }
+    }
+
+    /**
+     * Model seçimini sunucudan gelen bilgilere göre güncelle
+     */
+    function updateModelSelect(availableModels) {
+      // Şu anki seçili modeli sakla
+      const currentSelected = modelSelect.value;
+
+      // Önceki seçenekleri temizle
+      modelSelect.innerHTML = '';
+
+      // Model açıklamaları
+      const modelDescriptions = {
+        'tiny': 'Tiny (En Hızlı, Düşük Doğruluk)',
+        'base': 'Base (Hızlı)',
+        'small': 'Small (Orta Hız)',
+        'medium': 'Medium (Önerilen)',
+        'large': 'Large (En Yüksek Doğruluk, Yavaş)',
+        'turbo': 'Turbo (Hızlandırılmış, Medium Doğruluk)'
+      };
+
+      // Modelleri ekle
+      for (const model of availableModels) {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = modelDescriptions[model] || model;
+        option.selected = model === currentSelected;
+        modelSelect.appendChild(option);
+      }
+
+      // Eğer önceki seçim şimdi listeye dahil değilse, varsayılan olarak "medium" seç
+      if (!availableModels.includes(currentSelected)) {
+        modelSelect.value = availableModels.includes('medium') ? 'medium' : availableModels[0];
+      }
+    }
+
+    /**
+     * Mikrofon erişimini kontrol et
+     */
+    async function checkMicrophoneAccess() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // İzin verildiyse stream'i kapat
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err) {
+        console.error("Mikrofon erişimi hatası:", err);
+        showToast("Lütfen mikrofon erişimine izin verin", "error");
+        // Butonları devre dışı bırak
+        recordBtn.disabled = true;
+        recordBtn.classList.add("btn-disabled");
+      }
+    }
+
+    /**
+     * Tarayıcı uyumluluğunu kontrol et
+     */
+    function checkBrowserCompatibility() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error("Tarayıcınız ses kaydını desteklemiyor");
+        showToast("Tarayıcınız ses kaydını desteklemiyor. Lütfen modern bir tarayıcı kullanın.", "error");
+        recordBtn.disabled = true;
+        recordBtn.classList.add("btn-disabled");
+        return false;
+      }
+
+      // MediaRecorder desteğini kontrol et
+      if (!window.MediaRecorder) {
+        console.error("Tarayıcınız MediaRecorder API'yi desteklemiyor");
+        showToast("Tarayıcınız ses kayıt API'sini desteklemiyor. Lütfen modern bir tarayıcı kullanın.", "error");
+        recordBtn.disabled = true;
+        recordBtn.classList.add("btn-disabled");
+        return false;
+      }
+
+      return true;
+    }
+
+    /**
+     * Kullanıcı tercihlerini local storage'a kaydet
+     */
+    function saveUserPreferences() {
+      const preferences = {
+        darkMode: document.body.classList.contains('dark-mode'),
+        realtime: realtimeToggle.checked,
+        sensitivity: sensitivityRange.value,
+        model: modelSelect.value,
+        duration: durationInput.value,
+        version: APP_VERSION
+      };
+
+      try {
+        localStorage.setItem('sesanaliz_preferences', JSON.stringify(preferences));
+      } catch (err) {
+        console.error("Kullanıcı tercihleri kaydedilemedi:", err);
+      }
+    }
+
+    /**
+     * Kullanıcı tercihlerini local storage'dan yükle
+     */
+    function loadUserPreferences() {
+      try {
+        const preferences = JSON.parse(localStorage.getItem('sesanaliz_preferences'));
+
+        if (preferences) {
+          // Tema
+          if (preferences.darkMode) {
+            document.body.classList.add('dark-mode');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+          }
+
+          // Diğer ayarlar
+          realtimeToggle.checked = preferences.realtime ?? true;
+          isRealTimeEnabled = realtimeToggle.checked;
+
+          sensitivityRange.value = preferences.sensitivity ?? 75;
+          sensitivity = sensitivityRange.value;
+
+          // Model seçimi (eğer mevcut seçenekler arasında varsa)
+          if (preferences.model) {
+            const modelOptions = Array.from(modelSelect.options).map(opt => opt.value);
+            if (modelOptions.includes(preferences.model)) {
+              modelSelect.value = preferences.model;
+            }
+          }
+
+          durationInput.value = preferences.duration ?? DEFAULT_DURATION;
+        }
+      } catch (err) {
+        console.error("Kullanıcı tercihleri yüklenemedi:", err);
+        // Varsayılan değerlere dön
+        resetToDefaultPreferences();
+      }
+    }
+
+    /**
+     * Varsayılan tercihlere sıfırla
+     */
+    function resetToDefaultPreferences() {
+      realtimeToggle.checked = true;
+      isRealTimeEnabled = true;
+      sensitivityRange.value = 75;
+      sensitivity = 75;
+      modelSelect.value = 'medium';
+      durationInput.value = DEFAULT_DURATION;
+
+      // Tema sıfırlama
+      document.body.classList.remove('dark-mode');
+      themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+
+      saveUserPreferences();
+    }
+
+    /**
+     * Gerçek zamanlı analiz değişikliği
+     */
+    function handleRealtimeToggle() {
+      isRealTimeEnabled = this.checked;
+      saveUserPreferences();
+
+      showToast(isRealTimeEnabled ?
+        "Gerçek zamanlı analiz etkin" :
+        "Gerçek zamanlı analiz devre dışı",
+        "info");
+    }
+
+    /**
+     * Mikrofon hassasiyeti değişikliği
+     */
+    function handleSensitivityChange() {
+      sensitivity = this.value;
+      saveUserPreferences();
+    }
+
+    /**
+     * Kayıt süresi değişikliği
+     */
+    function handleDurationInput() {
+      // Geçerli değer aralığını kontrol et
+      if (this.value > MAX_DURATION) {
+        this.value = MAX_DURATION;
+        showToast(`Maksimum kayıt süresi ${MAX_DURATION} saniye`, "warning");
+      } else if (this.value < MIN_DURATION) {
+        this.value = MIN_DURATION;
+        showToast("Minimum değer 0 olmalıdır", "warning");
+      }
+
+      saveUserPreferences();
+    }
+
+    /**
+     * Tema değiştirme fonksiyonu
+     */
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+
+      if (document.body.classList.contains('dark-mode')) {
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      } else {
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      }
+
+      saveUserPreferences();
+    }
+
+    /**
+     * Duygu durumunu güncelleme fonksiyonu
+     * @param {string} emotion - Duygu durumu (happy, sad, angry, neutral)
+     * @param {number} score - Duygu skoru (0-1 arası)
+     */
+    function updateEmotionDisplay(emotion, score) {
+      // Konsola duygu analizi bilgisini yazdır
+      console.log(`Duygu durumu güncelleniyor: ${emotion}, Skor: ${score}`);
+
+      // Bu noktada değerleri kontrol et
+      if (!emotion || typeof emotion !== 'string') {
+        console.warn("Geçersiz duygu değeri:", emotion);
+        emotion = "neutral";
+      }
+
+      if (isNaN(score) || score < 0 || score > 1) {
+        console.warn("Geçersiz skor değeri:", score);
+        score = 0.5;
+      }
+
+      // Duygu adını küçük harfe çevir
+      emotion = emotion.toLowerCase();
+
+      // Duygu durumunu belirle
+      const config = emotionConfig[emotion] || emotionConfig.neutral;
+
+      // Duygu ikonu ve adını güncelle
+      emotionIcon.textContent = config.icon;
+      emotionName.textContent = config.text;
+      emotionScore.textContent = `Skor: ${score.toFixed(2)}`;
+
+      // Duygu göstergesini güncelle
+      emotionMeter.className = `emotion-meter-fill ${config.className}`;
+      emotionMeter.style.width = `${score * 100}%`;
+    }
+
+    /**
+     * Sürekli kayıt ve analiz fonksiyonu
+     */
+    function startContinuousRecording() {
+      if (!isRealTimeEnabled || !isRecording) return;
+
+      if (recordingInterval) clearInterval(recordingInterval);
+
+      recordingInterval = setInterval(() => {
+        if (mediaRecorder && mediaRecorder.state === "recording" && !isProcessing) {
+          // Geçici olarak durdur ve mevcut verileri işle
+          isProcessing = true;
+
+          // MediaRecorder'ı durdur
+          mediaRecorder.stop();
+
+          // Bir süre bekleyip yeni kayıt başlat
+          setTimeout(() => {
+            if (currentStream && isRecording) {
+              setupNewMediaRecorder();
+              mediaRecorder.start();
+              isProcessing = false;
+            }
+          }, 1000); // 1 saniye bekle
+        }
+      }, RECORDING_INTERVAL);
+    }
+
+    /**
+     * Desteklenen MIME tipini belirle
+     */
+    function getSupportedMimeType() {
+      const types = [
+        'audio/webm',
+        'audio/webm;codecs=opus',
+        'audio/ogg;codecs=opus',
+        'audio/mp4'
+      ];
+
+      for (let type of types) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          console.info(`Desteklenen MIME tipi: ${type}`);
+          return type;
+        }
+      }
+
+      // Varsayılan olarak webm kullan
+      console.warn("Desteklenen MIME tipi bulunamadı, varsayılan kullanılıyor");
+      return 'audio/webm';
+    }
+
+    /**
+     * Yeni media recorder kur
+     */
+    function setupNewMediaRecorder() {
+      if (!currentStream) return;
+
+      try {
+        // Desteklenen MIME tipini belirle
+        const mimeType = getSupportedMimeType();
+
+        // MediaRecorder için ayarlar
+        const options = {
+          mimeType: mimeType,
+          audioBitsPerSecond: 128000 // 128 kbps
+        };
+
+        // MediaRecorder oluştur
+        mediaRecorder = new MediaRecorder(currentStream, options);
+
+        // Ses parçalarını sıfırla
+        audioChunks = [];
+
+        // Veri erişilebilir olduğunda ekle
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        // Durdurulduğunda ses verilerini işle
+        mediaRecorder.onstop = processAudioData;
+
+        // Hata durumu
+        mediaRecorder.onerror = err => {
+          console.error("MediaRecorder hatası:", err);
+          showToast("Ses kaydı sırasında bir hata oluştu", "error");
+          stopRecording();
+        };
+
+        return true;
+      } catch (err) {
+        console.error("MediaRecorder oluşturma hatası:", err);
+        showToast("Ses kaydedici oluşturulamadı. Lütfen farklı bir tarayıcı deneyin.", "error");
+        stopRecording();
+        return false;
+      }
+    }
+
+    /**
+     * Ses verilerini işleme fonksiyonu
+     */
+    async function processAudioData() {
+      // Live indicator'ü aktif et
+      liveIndicator.classList.add("active");
+
+      // İşlendiğini bildiren işaret
+      isProcessing = true;
+
+      try {
+        if (audioChunks.length === 0) {
+          console.error("İşlenecek ses verisi bulunamadı");
+          showToast("İşlenecek ses verisi bulunamadı", "error");
+          isProcessing = false;
+          liveIndicator.classList.remove("active");
+          return;
+        }
+
+        // Ses verisini blob olarak oluştur
+        const blob = new Blob(audioChunks, { type: getSupportedMimeType() });
+
+        // Ses boyutu kontrolü
+        if (blob.size < 1000) {
+          console.warn("Ses verisi çok küçük, işleme atlanıyor");
+          isProcessing = false;
+          liveIndicator.classList.remove("active");
+          return;
+        }
+
+        // FormData oluştur
+        const formData = new FormData();
+        formData.append("audio", blob, "record.webm");
+
+        // Model seçimini gönder
+        formData.append("model", modelSelect.value);
+
+        // Hassasiyet değerini gönder
+        formData.append("sensitivity", sensitivity);
+
+        // UI geri bildirim ver
+        transcriptDiv.innerHTML = '<span class="transcript-placeholder"><i class="fas fa-spinner fa-spin"></i> Ses işleniyor...</span>';
+        transcriptInfo.style.display = "none";
+
+        // Sunucuya gönder
+        const response = await fetch("/transcribe", {
+          method: "POST",
+          body: formData
+        });
+
+        // Cevabı kontrol et
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Sunucu hatası (${response.status}): ${errorText}`);
+        }
+
+        // JSON olarak cevabı al
+        const data = await response.json();
+
+        // Veriyi işle
+        if (data.text) {
+          // Boş placeholder sınıfını kaldır
+          transcriptDiv.classList.remove("transcript-placeholder");
+          transcriptDiv.textContent = data.text;
+          transcribedText = data.text;
+
+          // İndirme butonunu etkinleştir
+          downloadBtn.disabled = false;
+          downloadBtn.classList.remove("btn-disabled");
+
+          // Model bilgisini göster
+          if (data.model_used) {
+            lastModelUsed = data.model_used;
+            transcriptInfo.textContent = `Model: ${data.model_used}`;
+            transcriptInfo.className = "transcript-info";
+
+            // Turbo modeli için özel stil
+            if (data.model_used === "turbo") {
+              transcriptInfo.classList.add("model-badge");
+              transcriptInfo.classList.add("turbo");
+            } else {
+              transcriptInfo.classList.add("model-badge");
+            }
+
+            transcriptInfo.style.display = "inline-block";
+          }
+
+          // Duygu analizi sonuçlarını göster
+          if (data.emotion && data.emotion_score !== undefined) {
+            console.log(`Duygu analizi sonucu: ${data.emotion}, Skor: ${data.emotion_score}`);
+            updateEmotionDisplay(data.emotion.toLowerCase(), data.emotion_score);
+          } else {
+            console.warn("Duygu analizi verisi eksik:", data);
+            updateEmotionDisplay("neutral", 0.5);
+          }
+        } else {
+          // Hata durumu
+          transcriptDiv.innerHTML = '<span class="transcript-placeholder"><i class="fas fa-exclamation-triangle"></i> Ses tanıma yapılamadı.</span>';
+          showToast("Ses tanıma yapılamadı", "error");
+        }
+      } catch (err) {
+        console.error("Veri işleme hatası:", err);
+
+        // Daha açıklayıcı hata mesajı
+        let errorMessage = err.message;
+        if (err.name === "AbortError") {
+          errorMessage = "Sunucu yanıt vermedi. Sunucu yükü yüksek olabilir.";
+        } else if (err.name === "TypeError" && err.message.includes("Failed to fetch")) {
+          errorMessage = "Sunucu bağlantısı kurulamadı. İnternet bağlantınızı kontrol edin.";
+        }
+
+        transcriptDiv.innerHTML = '<span class="transcript-placeholder"><i class="fas fa-exclamation-circle"></i> Hata: ' + errorMessage + '</span>';
+        showToast("Bir hata oluştu: " + errorMessage, "error");
+      } finally {
+        // İşlem durumunu sıfırla
+        isProcessing = false;
+
+        // Live indicator'ü belirli bir süre sonra deaktif et
+        setTimeout(() => {
+          liveIndicator.classList.remove("active");
+        }, 500);
+      }
+    }
+
+    /**
+     * Kayıt başlat
+     */
+    async function startRecording() {
+      // Şu anda kayıt yapılıyorsa veya işlem sürüyorsa çık
+      if (isRecording || isProcessing) return;
+
+      // Cihaz desteğini kontrol et
+      if (!checkBrowserCompatibility()) return;
+
+      // Kayıt süresini al
+      const duration = parseInt(durationInput.value) || 0;
+
+      // UI geri bildirim ver
+      transcriptDiv.innerHTML = '<span class="transcript-placeholder"><i class="fas fa-microphone-alt"></i> Kayıt başlatıldı...</span>';
+      transcriptInfo.style.display = "none";
+      downloadBtn.disabled = true;
+      downloadBtn.classList.add("btn-disabled");
+
+      // Buton durumlarını güncelle
+      recordBtn.style.display = "none";
+      stopBtn.style.display = "flex"; // Her zaman göster
+
+      // Canlı göstergeyi aktif et
+      liveIndicator.classList.add("active");
+
+      // Kayıt durumunu güncelle
+      isRecording = true;
+
+      try {
+        // Mikrofona erişim iste
+        const constraints = {
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        currentStream = stream;
+
+        // Ses kaydediciyi ayarla
+        if (!setupNewMediaRecorder()) {
+          throw new Error("Ses kaydedici ayarlanamadı");
+        }
+
+        // Kayıt başlat
+        mediaRecorder.start();
+
+        // Bildirim göster
+        showToast(`Kayıt başlatıldı (${modelSelect.value} modeli)`, "success");
+
+        // Anlık analiz için kayıt döngüsünü başlat
+        if (isRealTimeEnabled) {
+          startContinuousRecording();
+        }
+
+        // Eğer süre belirtilmişse otomatik durdur
+        if (duration > 0) {
+          setTimeout(() => {
+            if (isRecording) {
+              stopRecording();
+            }
+          }, duration * 1000);
+        }
+      } catch (err) {
+        // Hata durumunda kullanıcıya bildir
+        console.error("Kayıt başlatma hatası:", err);
+
+        // Hata mesajını belirle
+        let errorMessage = "Mikrofon erişimi sağlanamadı";
+        if (err.name === "NotAllowedError") {
+          errorMessage = "Mikrofon erişimi reddedildi. Lütfen izin verin.";
+        } else if (err.name === "NotFoundError") {
+          errorMessage = "Mikrofon bulunamadı. Lütfen bir mikrofon bağlayın.";
+        } else if (err.name === "NotReadableError") {
+          errorMessage = "Mikrofon kullanılamıyor. Başka bir uygulama tarafından kullanılıyor olabilir.";
+        }
+
+        transcriptDiv.innerHTML = `<span class="transcript-placeholder"><i class="fas fa-exclamation-triangle"></i> ${errorMessage}</span>`;
+        liveIndicator.classList.remove("active");
+        stopBtn.style.display = "none";
+        recordBtn.style.display = "flex";
+        isRecording = false;
+        showToast(errorMessage, "error");
+      }
+    }
+
+    /**
+     * Kayıt durdur
+     */
+    function stopRecording() {
+      if (!isRecording) return;
+
+      // Kayıt durumunu güncelle
+      isRecording = false;
+
+      // Interval'i temizle
+      if (recordingInterval) {
+        clearInterval(recordingInterval);
+        recordingInterval = null;
+      }
+
+      // MediaRecorder'ı durdur
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+
+      // Buton durumlarını güncelle
+      stopBtn.style.display = "none";
+      recordBtn.style.display = "flex";
+
+      // İşlem zaten devam ediyorsa beklemesini bildiren UI göster
+      if (isProcessing) {
+        transcriptDiv.innerHTML = '<span class="transcript-placeholder"><i class="fas fa-cog fa-spin"></i> Ses işleniyor, lütfen bekleyin...</span>';
+      }
+
+      // Stream'i kapatarak mikrofonu serbest bırak
+      setTimeout(() => {
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+          currentStream = null;
+        }
+      }, 500);
+
+      // Bildirim göster
+      showToast("Kayıt durduruldu", "info");
+    }
+
+    /**
+     * Transkripsiyon metnini indir
+     */
+    function downloadTranscript() {
+      if (!transcribedText.trim()) {
+        showToast("İndirilecek metin bulunamadı", "warning");
+        return;
+      }
+
+      try {
+        // Sunucudan indirme yöntemini dene
+        window.location.href = "/download";
+
+        // Bildirim göster
+        showToast("Transkripsiyon metni indiriliyor", "success");
+      } catch (err) {
+        // Sunucudan indiremediyse, tarayıcıda indirme yöntemini dene
+        console.warn("Sunucudan indirme başarısız, tarayıcı indirmesi deneniyor:", err);
+
+        try {
+          // Blob oluştur
+          const blob = new Blob([transcribedText], { type: "text/plain;charset=utf-8" });
+
+          // Tarih bilgisi ekle
+          const date = new Date();
+          const dateStr = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+          const timeStr = `${date.getHours().toString().padStart(2, '0')}-${date.getMinutes().toString().padStart(2, '0')}`;
+
+          // Model bilgisini dosya adına ekle
+          const modelInfo = lastModelUsed ? `_${lastModelUsed}` : "";
+
+          // İndirme bağlantısı oluştur
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `sesanaliz_transkripsiyon${modelInfo}_${dateStr}_${timeStr}.txt`;
+
+          // Görünmez bağlantıyı sayfaya ekle ve tıkla
+          document.body.appendChild(a);
+          a.click();
+
+          // Temizlik
+          URL.revokeObjectURL(url);
+          a.remove();
+
+          showToast("Transkripsiyon metni indirildi", "success");
+        } catch (clientErr) {
+          console.error("Metin indirme hatası:", clientErr);
+          showToast("Dosya indirilemedi: " + clientErr.message, "error");
+        }
+      }
+    }
+
+    /**
+     * Transkripsiyon metnini temizle
+     */
+    function clearTranscript() {
+      // İşlem devam ediyorsa iptal et
+      if (isProcessing) {
+        isProcessing = false;
+      }
+
+      // Kayıt devam ediyorsa durdur
+      if (isRecording) {
+        stopRecording();
+      }
+
+      // Metni temizle
+      transcriptDiv.textContent = "Ses kaydetmek için \"Kayıtı Başlat\" düğmesine tıklayın.";
+      transcriptDiv.classList.add("transcript-placeholder");
+      transcribedText = "";
+
+      // Model bilgisini gizle
+      transcriptInfo.style.display = "none";
+
+      // İndirme butonunu devre dışı bırak
+      downloadBtn.disabled = true;
+      downloadBtn.classList.add("btn-disabled");
+
+      // Duygu durumunu sıfırla
+      updateEmotionDisplay("neutral", 0.5);
+
+      // Bildirim göster
+      showToast("Transkripsiyon temizlendi", "info");
+    }
+
+    /**
+     * Bildirim göster
+     * @param {string} message - Bildirim mesajı
+     * @param {string} type - Bildirim tipi (success, error, warning, info)
+     */
+    function showToast(message, type = "info") {
+      // Mesajı ayarla
+      toast.textContent = message;
+
+      // Tipi ayarla
+      toast.className = "toast";
+      toast.classList.add(type);
+
+      // Göster
+      toast.classList.add("show");
+
+      // Belirli bir süre sonra gizle
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
