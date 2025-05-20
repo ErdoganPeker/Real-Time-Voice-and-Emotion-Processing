@@ -1,64 +1,63 @@
 # 🎙️ Real-Time Voice and Emotion Processing
 
-Welcome to the **Real-Time Voice and Emotion Processing** project — a complete real-time web application that converts your voice to text and analyzes your emotions live.
-
-Using **OpenAI's Whisper** for high-accuracy speech-to-text and a **custom emotion classification model**, this system allows natural human-computer interaction, ideal for smart assistants, therapy bots, education tech, and real-time surveillance.
+Welcome to the **Real-Time Voice and Emotion Processing** project — a real-time AI system that listens to your voice, transcribes it, and detects your emotions live. Designed using **Whisper** by OpenAI and a custom emotion recognition model, this project enables more human-like interaction for voice-driven applications.
 
 ---
 
-## 📸 Demo
+## 📹 Demo
 
-### ▶️ Video Preview
+Watch the system in action!  
+➡️ Click the link below to play the demo video (requires download):
 
-https://user-images.githubusercontent.com/yourusername/demo.mp4
+[▶️ Watch Demo Video](video.mp4)
 
-### 🖼️ Screenshots
+---
 
-| 🎤 Voice Input | 😊 Emotion Output |
-|---------------|------------------|
-| ![Voice Input](screenshots/voice_input.png) | ![Emotion Output](screenshots/emotion_result.png) |
+## 🖼️ Screenshot
+
+Here is an example of the emotion analysis result:
+
+![Emotion Result](emotion_result.jpg)
 
 ---
 
 ## 🚀 Features
 
-- 🎧 **Live microphone input** via web interface  
-- 🔤 **Real-time transcription** using OpenAI's Whisper (base/medium/large selectable)  
-- 😊 **Emotion recognition** (Happy, Sad, Angry, Neutral, etc.)  
-- 📊 Graph-based emotion feedback (Matplotlib or Chart.js support)  
-- 🌐 Flask-based lightweight server-side application  
-- 🖥️ Clean and responsive frontend (HTML/CSS/JavaScript)  
-- 📁 Optional saving of results as `.txt`, `.json`, or `.csv`  
-- 🎛️ Model selection panel for advanced users
+- 🎧 Real-time microphone audio capture
+- 🔤 Instant transcription using OpenAI Whisper
+- 😊 Emotion classification (Happy, Sad, Angry, Neutral, etc.)
+- 🌐 Flask-powered web interface
+- 📁 Result exporting as JSON
+- 📊 Optional graph-based feedback
+- 🧩 Lightweight and modular design
 
 ---
 
 ## 📚 Technologies Used
 
-| Component       | Technology                         |
-|------------------|-------------------------------------|
-| Transcription    | Whisper (PyTorch)                   |
-| Emotion Analysis | scikit-learn / TensorFlow           |
-| Backend          | Python 3.11 + Flask                 |
-| Frontend         | HTML + CSS + JavaScript             |
-| Audio Handling   | ffmpeg + pydub                      |
-| Visualization    | Matplotlib / Chart.js               |
+| Purpose              | Technology                      |
+|----------------------|----------------------------------|
+| Speech Recognition   | Whisper (PyTorch)                |
+| Emotion Detection    | Scikit-learn or TensorFlow       |
+| Backend              | Flask (Python 3.11)              |
+| Audio Handling       | ffmpeg + pydub                   |
+| UI                   | HTML, CSS, JavaScript            |
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ Installation
 
-Make sure you have **Python 3.11+**, `ffmpeg`, and `pip` installed.
+Make sure you have Python 3.11+ and ffmpeg installed.
 
 ```bash
-# 1. Clone the repo
+# Clone the repository
 git clone https://github.com/yourusername/real-time-voice-emotion.git
 cd real-time-voice-emotion
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Run the application
+# Run the application
 python app.py
 
 Then open your browser and go to:
