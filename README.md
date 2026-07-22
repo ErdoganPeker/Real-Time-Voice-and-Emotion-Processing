@@ -1,102 +1,121 @@
 # Real-Time Voice & Emotion Processing
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
-![Whisper](https://img.shields.io/badge/OpenAI-Whisper-412991?style=flat&logo=openai&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-Backend-black?style=flat&logo=flask&logoColor=white)
-![Deep Learning](https://img.shields.io/badge/Deep%20Learning-Emotion%20AI-ff6b6b?style=flat)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat&logo=fastapi&logoColor=white)
+![WebSocket](https://img.shields.io/badge/WebSocket-Realtime-black?style=flat&logo=websocket&logoColor=white)
+![Whisper](https://img.shields.io/badge/faster--whisper-CTranslate2-412991?style=flat&logo=openai&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat)
 
-> Real-time speech-to-text transcription combined with emotion recognition from audio — processes live microphone input to simultaneously transcribe speech and detect the speaker's emotional state.
+> Streams live microphone audio over a WebSocket and returns a continuously updating transcript alongside a real, signal-derived emotion reading — no cloud API, no canned output.
 
----
+![Screenshot](screenshot.png)
 
 ## Overview
 
-This project fuses two AI pipelines into one real-time system:
+This project pairs two genuinely computed pipelines on the same live audio stream:
 
-1. **Speech Transcription** — OpenAI Whisper converts live audio to text with high accuracy across accents and noise conditions.
-2. **Emotion Recognition** — A deep learning classifier analyzes acoustic features (pitch, energy, MFCCs) to predict the speaker's emotional state at inference time.
+1. **Speech-to-text** — [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (the CTranslate2 port of OpenAI Whisper) transcribes audio on CPU with int8 quantization, using the `base` model.
+2. **Emotion analysis** — a DSP-based scoring system built on [librosa](https://librosa.org/) extracts RMS energy, pitch/F0 (via the YIN algorithm), zero-crossing rate, and spectral centroid from each chunk, then maps those acoustic features through a reasoned weighting scheme into an emotion label and a full confidence breakdown. There is no randomness and no fixed/canned output — every number changes with the actual sound of your voice.
 
-Both pipelines run concurrently on the same audio stream and results are served through a Flask web interface with live updates.
-
-## Demo
-
-![Emotion Result](emotion_result.jpg)
-
-[Watch the demo video](video.mp4)
+Both results are pushed back to the browser over the same WebSocket connection as you speak, so the UI updates continuously with no page reloads or polling.
 
 ## Features
 
-- Real-time microphone audio capture
-- Speech transcription powered by OpenAI Whisper (PyTorch)
-- Multi-class emotion recognition — Happy, Sad, Angry, Neutral, and more
-- Flask-powered web interface with live transcript and emotion feed
-- Result export as JSON for downstream use
-- Lightweight and modular architecture — swap models without rewriting the pipeline
+- **Real-time speech-to-text** via faster-whisper (CTranslate2, CPU, int8 quantization) — low-latency transcription without a GPU
+- **Real DSP-based emotion detection** — Happy, Sad, Excited, Calm, Stressed, and Neutral are derived from actual acoustic features (RMS energy, YIN pitch, zero-crossing rate, spectral centroid), not randomized or hardcoded
+- **Confidence score and full emotion distribution** — every response includes the leading label plus a percentage breakdown across all emotion classes
+- **Rolling-buffer transcription architecture** — the server accumulates audio in a per-connection buffer and re-transcribes the whole buffer on each chunk, committing text only at natural pauses (or a hard time cap), so words are never split across chunk boundaries
+- **Live waveform visualization** — an animated audio waveform and a pulsing microphone icon reflect the input in real time
+- **Emotion bar charts** — the live percentage breakdown for each emotion is rendered as animated bars in the browser
+
+## How It Works
+
+```
+Browser microphone (Web Audio API)
+        │  PCM16 audio chunks
+        ▼
+   WebSocket  (/ws/audio)
+        │
+        ▼
+ Server-side rolling buffer  (accumulates audio since the last commit)
+        │
+        ├──► faster-whisper  ──────────────► transcript segments
+        │
+        └──► librosa DSP features  ─────────► RMS, F0/pitch, ZCR, spectral centroid
+                     │
+                     ▼
+           weighted scoring + softmax ──► emotion label, confidence, full distribution
+        │
+        ▼
+ Natural-pause detection ──► commit transcript & reset buffer (or trim on a max-length cap)
+        │
+        ▼
+ Result pushed back over the same WebSocket ──► live transcript + emotion UI
+```
+
+On every incoming audio chunk, the server re-transcribes the entire rolling buffer rather than just the new bytes. This is what prevents words from being split across chunk boundaries. A commit happens — locking in the transcript so far and resetting the buffer — either when a trailing silence gap is detected (a natural pause) or when the buffer exceeds a maximum duration (a forced cut), which keeps memory and latency bounded for continuous speakers.
 
 ## Tech Stack
 
 | Category | Tools |
 |----------|-------|
-| Speech Recognition | OpenAI Whisper (PyTorch) |
-| Emotion Classification | Scikit-learn / TensorFlow |
-| Audio Handling | pydub, FFmpeg |
-| Backend | Flask (Python 3.11) |
-| Frontend | HTML5, CSS3, JavaScript |
-
-## Project Structure
-
-```
-Real-Time-Voice-and-Emotion-Processing/
-├── app.py              # Core backend — audio capture, Whisper, emotion inference, Flask server
-├── index.html          # Browser-based live monitoring UI
-├── requirements.txt    # Python dependencies
-├── emotion_result.jpg  # Sample emotion recognition output
-├── video.mp4           # Demo recording
-└── LICENSE
-```
+| Backend | Python, FastAPI, WebSocket, Uvicorn |
+| Speech Recognition | faster-whisper (CTranslate2, CPU, int8) |
+| Emotion Analysis | librosa (RMS energy, YIN pitch/F0, zero-crossing rate, spectral centroid) |
+| Numerical Processing | NumPy |
+| Frontend | HTML5, CSS3, JavaScript, Web Audio API |
+| Templating | Jinja2 |
 
 ## Getting Started
 
 ### Prerequisites
 
 - Python 3.11+
-- FFmpeg installed and on PATH (required by Whisper/pydub)
 - A working microphone
+- A browser that supports the Web Audio API and grants microphone permissions (Chrome, Edge, Firefox)
 
 ### Installation
 
 ```bash
 git clone https://github.com/ErdoganPeker/Real-Time-Voice-and-Emotion-Processing.git
-cd Real-Time-Voice-and-Emotion-Processing
+cd Real-Time-Voice-and-Emotion-Processing/app
+python -m venv .venv
+.venv\Scripts\activate      # Windows
+# source .venv/bin/activate # macOS/Linux
 pip install -r requirements.txt
 ```
 
 ### Run
 
 ```bash
-python app.py
+python main.py
 ```
 
-Open your browser and go to `http://127.0.0.1:5000` to see the live transcript and emotion stream.
+Open `http://127.0.0.1:5015` in your browser and grant microphone access when prompted — the transcript and emotion readout update live as you speak.
 
-## How It Works
+> **Note**: The first run downloads the `faster-whisper` `base` model. You can override the model size with the `WHISPER_MODEL_SIZE` environment variable.
+
+### Run with Docker
+
+```bash
+docker build -t voice-emotion .
+docker run -p 8000:8000 voice-emotion
+```
+
+Then open `http://127.0.0.1:8000`.
+
+## Project Structure
 
 ```
-Microphone Input
-      │
-      ▼
- Audio Buffer (chunked)
-      │
-      ├──► Whisper Model ──────────────► Transcript Text
-      │
-      └──► Feature Extraction (MFCC, pitch, energy)
-                │
-                ▼
-         Emotion Classifier ──► Emotion Label + Confidence
-                │
-                ▼
-         Flask WebSocket / UI Output
+Real-Time-Voice-and-Emotion-Processing/
+├── app/
+│   ├── main.py           # FastAPI backend — WebSocket, rolling buffer, Whisper + DSP pipeline
+│   ├── requirements.txt  # Python dependencies
+│   └── templates/
+│       └── index.html    # Live transcript + emotion UI (waveform, mic pulse, bar charts)
+├── Dockerfile
+├── screenshot.png
+└── LICENSE
 ```
 
 ## Author
@@ -104,3 +123,7 @@ Microphone Input
 **Erdogan Yasin Peker** — Computer Engineer | AI & ML Specialist
 
 [GitHub](https://github.com/ErdoganPeker) · [LinkedIn](https://www.linkedin.com/in/erdogan-yasin-peker-b107ba24b/) · [Kaggle](https://www.kaggle.com/erdoanpeker)
+
+## License
+
+MIT — see [LICENSE](LICENSE).
