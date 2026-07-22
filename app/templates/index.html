@@ -44,16 +44,17 @@ button.stop{background:#0e0e16;border:1px solid #1e1e35;color:#94a3b8}
 <div class="container">
   <span class="badge">🎙️ NLP + Audio AI</span>
   <h1>Real-Time Voice & Emotion</h1>
-  <p class="sub">Live speech transcription with multi-label emotion detection using Whisper + transformer classifier.</p>
+  <p class="sub">Live microphone capture streamed over WebSocket, transcribed with faster-whisper and scored with real DSP-based emotion features.</p>
 
   <div class="mic-card">
     <div id="rec-status" style="display:none;margin-bottom:.75rem"><span class="status-dot"></span><span class="live-label">RECORDING</span></div>
     <div class="mic-wrap"><div class="pulse" id="pulse" style="animation:none"></div><div class="mic-icon">🎙️</div></div>
     <div class="wave-container" id="waves"></div>
     <div class="controls">
-      <button onclick="startDemo()">▶ Start Demo</button>
-      <button class="stop" onclick="stopDemo()">⏹ Stop</button>
+      <button id="startBtn" onclick="startRecording()">▶ Start</button>
+      <button class="stop" id="stopBtn" onclick="stopRecording()">⏹ Stop</button>
     </div>
+    <div id="conn-msg" style="margin-top:.75rem;font-size:.75rem;color:#64748b">Not connected</div>
   </div>
 
   <div class="emotion-card">
@@ -84,37 +85,130 @@ for(let i=0;i<30;i++){
   wc.appendChild(b);
 }
 
-const emojis={'Happy':'😄','Sad':'😢','Excited':'🤩','Neutral':'😐','Tired':'😴','Surprised':'😲','Focused':'🧐','Calm':'😌','Angry':'😠'};
-let step=0, timer=null, active=false;
+const emojis={'Happy':'😄','Sad':'😢','Excited':'🤩','Neutral':'😐','Tired':'😴','Surprised':'😲','Focused':'🧐','Calm':'😌','Angry':'😠','Stressed':'😣'};
 
-function startDemo(){
-  if(active)return;
-  active=true;
-  document.getElementById('rec-status').style.display='block';
-  document.getElementById('pulse').style.animation='pulse 1.5s ease-out infinite';
-  document.querySelectorAll('.wave-bar').forEach((b,i)=>{b.className='wave-bar active';b.style.animationDelay=(i*0.05)+'s';});
-  timer=setInterval(nextStep,2500);
-  nextStep();
+let audioCtx=null, mediaStream=null, sourceNode=null, processorNode=null, silentGain=null;
+let ws=null, active=false;
+let bufferQueue=[], bufferedSamples=0;
+const CHUNK_SECONDS=2.5;
+let transcriptSoFar='';
+
+function setConn(msg){ document.getElementById('conn-msg').textContent=msg; }
+
+function floatTo16BitPCM(float32Array){
+  const out=new Int16Array(float32Array.length);
+  for(let i=0;i<float32Array.length;i++){
+    let s=Math.max(-1,Math.min(1,float32Array[i]));
+    out[i]=s<0?s*0x8000:s*0x7FFF;
+  }
+  return out;
 }
 
-function stopDemo(){
+function mergeBuffers(){
+  const merged=new Float32Array(bufferedSamples);
+  let offset=0;
+  for(const b of bufferQueue){ merged.set(b,offset); offset+=b.length; }
+  bufferQueue=[]; bufferedSamples=0;
+  return merged;
+}
+
+function flushChunk(force){
+  if(bufferedSamples===0) return;
+  if(!force && bufferedSamples < audioCtx.sampleRate*CHUNK_SECONDS) return;
+  const merged=mergeBuffers();
+  const pcm16=floatTo16BitPCM(merged);
+  if(ws && ws.readyState===WebSocket.OPEN){
+    ws.send(pcm16.buffer);
+  }
+}
+
+async function startRecording(){
+  if(active) return;
+  active=true;
+  transcriptSoFar='';
+  document.getElementById('transcript').textContent='Connecting...';
+  setConn('Connecting to server...');
+
+  try{
+    mediaStream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}});
+  }catch(err){
+    setConn('Microphone access denied: '+err.message);
+    active=false;
+    return;
+  }
+
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+  ws=new WebSocket(proto+'//'+location.host+'/ws/audio');
+  ws.binaryType='arraybuffer';
+
+  ws.onopen=()=>{
+    ws.send(JSON.stringify({type:'start', sampleRate: audioCtx.sampleRate}));
+    setConn('Connected — sample rate '+audioCtx.sampleRate+' Hz');
+    document.getElementById('rec-status').style.display='block';
+    document.getElementById('pulse').style.animation='pulse 1.5s ease-out infinite';
+    document.querySelectorAll('.wave-bar').forEach((b,i)=>{b.className='wave-bar active';b.style.animationDelay=(i*0.05)+'s';});
+    document.getElementById('transcript').textContent='Listening...';
+  };
+
+  ws.onmessage=(ev)=>{
+    const j=JSON.parse(ev.data);
+    if(j.type==='ready') return;
+    if(j.type!=='result') return;
+    handleResult(j);
+  };
+
+  ws.onerror=()=>{ setConn('WebSocket error'); };
+  ws.onclose=()=>{ setConn('Disconnected'); };
+
+  sourceNode=audioCtx.createMediaStreamSource(mediaStream);
+  processorNode=audioCtx.createScriptProcessor(4096,1,1);
+  silentGain=audioCtx.createGain();
+  silentGain.gain.value=0;
+
+  processorNode.onaudioprocess=(e)=>{
+    const input=e.inputBuffer.getChannelData(0);
+    bufferQueue.push(new Float32Array(input));
+    bufferedSamples+=input.length;
+    flushChunk(false);
+  };
+
+  sourceNode.connect(processorNode);
+  processorNode.connect(silentGain);
+  silentGain.connect(audioCtx.destination);
+}
+
+function handleResult(j){
+  if(j.text){
+    transcriptSoFar=j.text;
+    document.getElementById('transcript').textContent=transcriptSoFar;
+  }
+  document.getElementById('em-emoji').textContent=emojis[j.emotion]||'😐';
+  document.getElementById('em-name').textContent=j.emotion;
+  document.getElementById('em-conf').textContent='Confidence: '+(j.confidence*100).toFixed(1)+'% · chunk #'+j.chunk;
+  const bars=document.getElementById('em-bars');
+  bars.innerHTML=Object.entries(j.emotions).map(([k,v])=>`<div class="em-bar"><div class="em-label"><span>${k}</span><span>${v}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${v}%"></div></div></div>`).join('');
+}
+
+function stopRecording(){
+  if(!active) return;
   active=false;
-  clearInterval(timer);
+  flushChunk(true);
+
+  if(processorNode){ processorNode.disconnect(); processorNode.onaudioprocess=null; }
+  if(sourceNode) sourceNode.disconnect();
+  if(silentGain) silentGain.disconnect();
+  if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+  if(ws && ws.readyState===WebSocket.OPEN){
+    ws.send(JSON.stringify({type:'stop'}));
+    ws.close();
+  }
+  if(audioCtx) audioCtx.close();
+
   document.getElementById('rec-status').style.display='none';
   document.getElementById('pulse').style.animation='none';
   document.querySelectorAll('.wave-bar').forEach(b=>{b.className='wave-bar inactive';b.style.height='4px';});
-}
-
-async function nextStep(){
-  const r=await fetch('/demo/'+step);
-  const j=await r.json();
-  step++;
-  document.getElementById('em-emoji').textContent=emojis[j.emotion]||'😐';
-  document.getElementById('em-name').textContent=j.emotion;
-  document.getElementById('em-conf').textContent='Confidence: '+(j.confidence*100).toFixed(1)+'%';
-  document.getElementById('transcript').textContent=j.text;
-  const bars=document.getElementById('em-bars');
-  bars.innerHTML=Object.entries(j.emotions).map(([k,v])=>`<div class="em-bar"><div class="em-label"><span>${k}</span><span>${v}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${v}%"></div></div></div>`).join('');
+  setConn('Stopped');
 }
 </script>
 </body>
